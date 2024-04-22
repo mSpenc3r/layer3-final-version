@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/http//:mSpenc3r.github.io/layer3-final-version/static/css/main.886a5c1b.css",
-    "main.js": "/http//:mSpenc3r.github.io/layer3-final-version/static/js/main.976abe3f.js",
-    "static/js/453.ddf517a0.chunk.js": "/http//:mSpenc3r.github.io/layer3-final-version/static/js/453.ddf517a0.chunk.js",
-    "index.html": "/http//:mSpenc3r.github.io/layer3-final-version/index.html",
-    "main.886a5c1b.css.map": "/http//:mSpenc3r.github.io/layer3-final-version/static/css/main.886a5c1b.css.map",
-    "main.976abe3f.js.map": "/http//:mSpenc3r.github.io/layer3-final-version/static/js/main.976abe3f.js.map",
-    "453.ddf517a0.chunk.js.map": "/http//:mSpenc3r.github.io/layer3-final-version/static/js/453.ddf517a0.chunk.js.map"
+    "main.css": "/layer3-final-version/static/css/main.886a5c1b.css",
+    "main.js": "/layer3-final-version/static/js/main.52202d77.js",
+    "static/js/453.ddf517a0.chunk.js": "/layer3-final-version/static/js/453.ddf517a0.chunk.js",
+    "index.html": "/layer3-final-version/index.html",
+    "main.886a5c1b.css.map": "/layer3-final-version/static/css/main.886a5c1b.css.map",
+    "main.52202d77.js.map": "/layer3-final-version/static/js/main.52202d77.js.map",
+    "453.ddf517a0.chunk.js.map": "/layer3-final-version/static/js/453.ddf517a0.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.886a5c1b.css",
-    "static/js/main.976abe3f.js"
+    "static/js/main.52202d77.js"
   ]
 }
