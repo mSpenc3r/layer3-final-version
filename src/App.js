@@ -5,7 +5,13 @@ import './App.css';
 
 const ThreeGeoJSON = () => {
   const [hoverData, setHoverData] = useState(null);
+  const [isPanelOpen, setPanelOpen] = useState(false); // State to manage panel visibility
   const sceneRef = useRef(null);
+
+  // Function to toggle the description panel
+  const togglePanel = () => {
+    setPanelOpen(!isPanelOpen);
+  };
 
   useEffect(() => {
     const scene = new THREE.Scene();
@@ -271,35 +277,58 @@ const ThreeGeoJSON = () => {
     { color: "#ff9baf", label: "Highest Fraction NonWhite" }
     // Add more entries as needed
   ];
-return (
-  <>
-    <div ref={sceneRef} style={{ width: '100%', height: '100vh' }} />
+  return (
+    <>
+      <div className="overlay-container">
+        <header className="overlay-header">
+          <h1>Decoding Child Opportunity</h1>
+          <h2 className="overlay-subtitle">ARTG1600 - Max Spencer</h2>
+        </header>
+        
+        <div ref={sceneRef} />
 
-    <div className="bottom-left-container">
-      <div className="legend-container">
-        <h4 className="legend-header">Polygon Color Key</h4>
-        <ul className="legend-list">
-          {colorDescriptions.map((item, index) => (
-            <li key={index} className="legend-item">
-              <span className="legend-color-box" style={{ backgroundColor: item.color }}></span>
-              {item.label}
-            </li>
-          ))}
-        </ul>
-      </div>
-      {hoverData && (
-        <div className="info-panel">
-          <h4 className="info-header">Details</h4>
-          <p><strong>Zipcode:</strong> {hoverData.ZCTA5CE10}</p>
-          <p><strong>Child Opportunity Index:</strong> {hoverData.r_coi_nat}</p>
-          <p><strong>Fraction Nonwhite Population:</strong> {hoverData.fraction_nonwhite}</p>
-          <p><strong>Latitude:</strong> {hoverData.INTPTLAT10}</p>
-          <p><strong>Longitude:</strong> {hoverData.INTPTLON10}</p>
+        <div className="bottom-left-container">
+          <div className="legend-container">
+            <h4 className="legend-header">Polygon Color Key</h4>
+            <ul className="legend-list">
+              {colorDescriptions.map((item, index) => (
+                <li key={index} className="legend-item">
+                  <span className="legend-color-box" style={{ backgroundColor: item.color }}></span>
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+          {hoverData && (
+            <div className="info-panel">
+              <h4 className="info-header">Details</h4>
+              <p><strong>Zipcode:</strong> {hoverData.ZCTA5CE10}</p>
+              <p><strong>Child Opportunity Index:</strong> {hoverData.r_coi_nat}</p>
+              <p><strong>Fraction Nonwhite Population:</strong> {hoverData.fraction_nonwhite}</p>
+              <p><strong>Latitude:</strong> {hoverData.INTPTLAT10}</p>
+              <p><strong>Longitude:</strong> {hoverData.INTPTLON10}</p>
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  </>
-);
+
+        <div className={`description-panel ${isPanelOpen ? 'open' : ''}`}>
+          <h2>Description</h2>
+          <p>This dataset form DiversityDataKids is data collected from zipcodes in the United States
+             about child opportunity indexes. This overall child opportunity index can be broken down
+            into 3 categories that are used to calculate it, healthcare, education and socioeconomic
+            status, which have various weights that I have identified using linear regression methods.
+            Here, I am visualizing the relationship between the percentage of nonwhite population per
+            zipcode, and primarily compare it to the overall COI. The higher the height of the polygon
+            stack, the higher the nonwhite population, and unfortunately the lower the opportunity index.
+            This makes it incredibly clear where the city of Boston needs to invest resources in order
+            to uplift these communities and raise the opportunity for children, creating a more equitable
+            environment for all in Massachusetts.</p>
+        </div>
+        <button className="arrow-toggle" onClick={togglePanel}></button>
+      </div>
+    </>
+  );
+  
 };
 
 export default ThreeGeoJSON;

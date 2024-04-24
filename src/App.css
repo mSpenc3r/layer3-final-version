@@ -81,3 +81,75 @@ body {
   font-weight: 100;
   font-style: normal;
 }
+.overlay-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.overlay-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding-top: 5px;
+  padding-left: 20px;
+  z-index: 1000;
+  font-size: 30px;
+  color: white;
+}
+
+/* App.css */
+
+.description-panel {
+  position: fixed;
+  top: 20px;
+  right: -350px; /* Adjust width and hidden state position */
+  width: 300px;
+  height: 95vh;
+  background-color: rgba(39, 48, 55, 0.8);; /* Consistent with other panels */
+  border: 1px solid #2E3E4D;
+  transition: right 0.3s ease;
+  z-index: 1500;
+  padding: 20px;
+  box-sizing: border-box;
+  border-radius: 5px; /* Rounded corners */
+  color: white;
+}
+
+.description-panel.open {
+  right: 20px; /* Adjust if necessary based on the panel's width */
+}
+
+.arrow-toggle {
+  position: fixed;
+  top: 50%;
+  right: 0px; /* Align with the edge of the panel when closed */
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1601; /* Ensure it's above the panel */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transition: right 0.3s ease;
+}
+
+.description-panel.open + .arrow-toggle {
+  right: 320px; /* Adjust this based on the panel's width */
+}
+
+.arrow-toggle {
+  background-image: url('arrow-right.svg');
+}
+
+.description-panel.open + .arrow-toggle {
+  background-image: url('arrow-left.svg');
+}
+.overlay-subtitle {
+  font-size: medium;
+  font-weight: 300;
+  margin-top: -30px;
+}
