@@ -71,7 +71,7 @@ const ThreeGeoJSON = () => {
       const data = await response.json();
       data.features.forEach((feature) => {
         const { ZCTA5CE10, r_coi_nat, fraction_nonwhite, centroid, INTPTLAT10, INTPTLON10 } = feature.properties;
-        const stackHeight = drawPolygonWithStack(feature, 0.15, 0.15);  // Assuming stackHeight is calculated as before
+        const stackHeight = drawPolygonWithStack(feature, 0.15, 0.15); 
         if (centroid) {
           createSphereAtCentroid(centroid[1], centroid[0], r_coi_nat, stackHeight, { ZCTA5CE10, r_coi_nat, fraction_nonwhite, INTPTLAT10, INTPTLON10 });
         } else {
@@ -102,14 +102,13 @@ const ThreeGeoJSON = () => {
       return centroid;
     };
 
-    const createSphereAtCentroid = (lat, lng, rCoiNat, stackHeight, properties) => {
-      const { ZCTA5CE10, r_coi_nat, fraction_nonwhite, INTPTLAT10, INTPTLON10 } = properties;  // Destructure the properties
+    const createSphereAtCentroid = (lat, lng, rCoiNat, stackHeight, properties, stackMeshes) => {
       const x = (lng + 180) * (window.innerWidth / 360);
       const y = (lat - 90) * -(window.innerHeight / 180);
       const z = 0.5 + stackHeight;
     
       const visibleGeometry = new THREE.SphereGeometry(0.05, 32, 32);
-      const visibleMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, emissive: 0x000000 });
+      const visibleMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, emissive: 0x000000, emissiveIntensity: 1 });
       const visibleSphere = new THREE.Mesh(visibleGeometry, visibleMaterial);
       visibleSphere.position.set(x, y, z);
     
@@ -118,23 +117,15 @@ const ThreeGeoJSON = () => {
       const invisibleSphere = new THREE.Mesh(invisibleGeometry, invisibleMaterial);
       invisibleSphere.position.set(x, y, z);
     
-      // Add the visible sphere to the invisible sphere group for combined transformations
       const group = new THREE.Group();
       group.add(visibleSphere);
       group.add(invisibleSphere);
     
-      // Store relevant data for hover display
       invisibleSphere.userData = {
         isClickable: true,
         visibleSphere: visibleSphere,
-        properties: {
-          ZCTA5CE10: ZCTA5CE10,
-          r_coi_nat: r_coi_nat,
-          fraction_nonwhite: fraction_nonwhite,
-          INTPTLAT10: INTPTLAT10,
-          INTPTLON10: INTPTLON10
-
-        }
+        polygonStackMeshes: stackMeshes,  // Pass the array of meshes
+        properties: properties
       };
     
       scene.add(group);
@@ -145,14 +136,25 @@ const ThreeGeoJSON = () => {
       const fractionNonwhite = feature.properties.fraction_nonwhite;
       const layers = Math.ceil(fractionNonwhite / 10);
       const coordinates = feature.geometry.coordinates[0];
-      let stackHeight = 0; // Initialize stack height
+      let stackHeight = 0;
+      let stackMeshes = [];  // Array to store all meshes in the stack
+    
       for (let i = 0; i <= layers; i++) {
         const scaleFactor = 1 - (i * 0.105);
         const zOffset = i * heightOffset;
-        stackHeight += heightOffset; // Accumulate total height
-        addPolygonAndStroke(coordinates, scaleFactor, zOffset, i);
+        stackHeight += heightOffset;
+        const mesh = addPolygonAndStroke(coordinates, scaleFactor, zOffset, i);
+        stackMeshes.push(mesh);  // Store each mesh in the array
       }
-      return stackHeight; // Return the total height of the stack
+    
+      if (feature.properties.centroid) {
+        createSphereAtCentroid(feature.properties.centroid[1], feature.properties.centroid[0], feature.properties.r_coi_nat, stackHeight, feature.properties, stackMeshes);
+      } else {
+        const calculatedCentroid = calculateCentroid(coordinates);
+        createSphereAtCentroid(calculatedCentroid.lat, calculatedCentroid.lng, feature.properties.r_coi_nat, stackHeight, feature.properties, stackMeshes);
+      }
+    
+      return stackHeight;
     };
 
     const addPolygonAndStroke = (coordinates, scaleFactor, zOffset, layerIndex) => {
@@ -163,7 +165,9 @@ const ThreeGeoJSON = () => {
       const material = new THREE.MeshBasicMaterial({ color: materialColor, side: THREE.DoubleSide });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.z = zOffset;
+      mesh.originalColor = materialColor;  // Store the original color on the mesh
       scene.add(mesh);
+      return mesh;
     };
 
     const createShapeFromCoordinates = (coordinates) => {
@@ -223,14 +227,29 @@ const ThreeGeoJSON = () => {
     
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(spheres, true);
+      
     
-      // Reset all spheres' glow
-      spheres.forEach(sphere => sphere.userData.visibleSphere.material.emissive.setHex(0x000000));
+      // Reset all hover effects
+      spheres.forEach(sphere => {
+        sphere.userData.visibleSphere.material.emissive.setHex(0x000000);
+        if (sphere.userData.polygonStackMeshes) {
+          sphere.userData.polygonStackMeshes.forEach(mesh => {
+            mesh.material.color.set(mesh.originalColor);
+          });
+        }
+      });
     
       if (intersects.length > 0) {
         const intersectedSphere = intersects[0].object;
-        // Set glow
-        intersectedSphere.userData.visibleSphere.material.emissive.setHex(0xffff00);
+        intersectedSphere.userData.visibleSphere.material.color.setHex(0xffff00);
+        console.log("sphere intersecting");
+    
+        // Optionally change the entire stack color as previously discussed
+        if (intersectedSphere.userData.polygonStackMeshes) {
+          intersectedSphere.userData.polygonStackMeshes.forEach(mesh => {
+            mesh.material.color.setHex(0xffff00);
+          });
+        }
     
         // Display data
         setHoverData(intersectedSphere.userData.properties);
@@ -238,6 +257,7 @@ const ThreeGeoJSON = () => {
         setHoverData(null);
       }
     };
+    
     
     window.addEventListener('mousemove', onMouseMove);
 
@@ -261,12 +281,20 @@ const ThreeGeoJSON = () => {
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('resize', onWindowResize);
-
+    
       if (sceneRef.current) {
-    sceneRef.current.removeChild(renderer.domElement);
-  }
-  renderer.dispose(); // Clean up resources used by the renderer
-  };
+        sceneRef.current.removeChild(renderer.domElement);
+      }
+      renderer.dispose(); // Clean up resources used by the renderer
+      spheres.forEach(sphere => {
+        if (sphere.userData.polygonStackMeshes) {
+          sphere.userData.polygonStackMeshes.forEach(mesh => {
+            mesh.geometry.dispose();
+            mesh.material.dispose();
+          });
+        }
+      });
+    };
   }, []);
   const colorDescriptions = [
     { color: "#1a2837", label: "Least Fraction NonWhite" },
@@ -316,10 +344,12 @@ const ThreeGeoJSON = () => {
           <p>This dataset form DiversityDataKids is data collected from zipcodes in the United States
              about child opportunity indexes. This overall child opportunity index can be broken down
             into 3 categories that are used to calculate it, healthcare, education and socioeconomic
-            status, which have various weights that I have identified using linear regression methods.
+            status, which have various weights that I have identified using linear regression methods. <br></br><br></br>
             Here, I am visualizing the relationship between the percentage of nonwhite population per
             zipcode, and primarily compare it to the overall COI. The higher the height of the polygon
             stack, the higher the nonwhite population, and unfortunately the lower the opportunity index.
+            Upon hovering over the sphere aboove the polygon, you may capture the quantitative data associated
+            with each polygon.<br></br><br></br>
             This makes it incredibly clear where the city of Boston needs to invest resources in order
             to uplift these communities and raise the opportunity for children, creating a more equitable
             environment for all in Massachusetts.</p>
